@@ -1,0 +1,60 @@
+
+<div id="viewerCount" style="
+    font-family: 'Noto Sans Rounded', sans-serif;
+    font-size: 48px;
+    color: white;
+    background: rgba(255,255,255,0.5);
+    border-radius: 10px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" 
+         alt="YouTube" 
+         style="height: 40px;">
+    <span id="viewerNumber">0</span>
+</div>
+
+<script>
+const API_KEY = "AIzaSyAnWQGPbK2ufQZjbck7CqAtF0Dt7-pX9Fw";
+const CHANNEL_ID = "UCz1_mlHd0aPyJxk8iQJeqyw";
+
+async function getLiveVideoId() {
+    try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=id&channelId=${CHANNEL_ID}&eventType=live&type=video&key=${API_KEY}`);
+        const data = await res.json();
+        if (data.items.length > 0) {
+            return data.items[0].id.videoId;
+        }
+    } catch (e) {
+        console.error("라이브 영상 ID 불러오기 오류:", e);
+    }
+    return null;
+}
+
+async function fetchViewers(videoId) {
+    try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}&key=${API_KEY}`);
+        const data = await res.json();
+        if (data.items.length > 0) {
+            const viewers = data.items[0].liveStreamingDetails.concurrentViewers || 0;
+            document.getElementById("viewerNumber").innerText = viewers;
+        }
+    } catch (e) {
+        console.error("동접자 수 불러오기 오류:", e);
+    }
+}
+
+async function updateViewerCount() {
+    const videoId = await getLiveVideoId();
+    if (videoId) {
+        fetchViewers(videoId);
+    } else {
+        document.getElementById("viewerNumber").innerText = "-";
+    }
+}
+
+setInterval(updateViewerCount, 5000);
+updateViewerCount();
+</script>
